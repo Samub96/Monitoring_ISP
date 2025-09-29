@@ -9,6 +9,7 @@ jobs:
       - uses: actions/checkout@v3
       - run: kea-dhcp4 -t -c ./configs/kea-dhcp4.conf
       - run: kea-dhcp6 -t -c ./configs/kea-dhcp6.conf
+  
 
   validate-dns:
     runs-on: ubuntu-latest
@@ -45,15 +46,32 @@ jobs:
       - run: perfdhcp -4 -r 3 -n 3 127.0.0.1
       - run: dig @127.0.0.1 akranes.xyz
 
-  integration-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - run: docker-compose up -d
-      - run: sleep 10
-      - run: curl -I http://localhost
-      - run: dig @127.0.0.1 akranes.xyz
-      - run: docker-compose down
+  iintegration-test:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v3
+
+    - name: Instalar docker-compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+
+    - name: Levantar entorno
+      run: docker-compose up -d
+
+    - name: Esperar servicios
+      run: sleep 10
+
+    - name: Probar Web
+      run: curl -I http://localhost | grep "200 OK"
+
+    - name: Probar DNS
+      run: dig @127.0.0.1 akranes.xyz
+
+    - name: Apagar entorno
+      if: always()
+      run: docker-compose down
+
 
   deploy:
     needs: [integration-test]
