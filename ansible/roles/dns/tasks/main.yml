@@ -1,0 +1,21 @@
+- name: Instalar Bind9
+  apt:
+    name: bind9
+    state: present
+    update_cache: yes
+
+- name: Copiar configuración de opciones
+  template:
+    src: named.conf.options.j2
+    dest: /etc/bind/named.conf.options
+
+- name: Copiar zona ejemplo
+  template:
+    src: db.akranes.xyz.j2
+    dest: /etc/bind/db.akranes.xyz
+
+- name: Reiniciar Bind9
+  service:
+    name: bind9
+    state: restarted
+    enabled: true

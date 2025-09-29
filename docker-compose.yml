@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  dhcp4:
+    image: iscproject/kea-dhcp4
+    volumes:
+      - ./configs/kea-dhcp4.conf:/etc/kea/kea-dhcp4.conf
+    ports:
+      - "67:67/udp"
+
+  dhcp6:
+    image: iscproject/kea-dhcp6
+    volumes:
+      - ./configs/kea-dhcp6.conf:/etc/kea/kea-dhcp6.conf
+    ports:
+      - "547:547/udp"
+
+  dns:
+    image: internetsystemsconsortium/bind9:9.18
+    volumes:
+      - ./configs/named.conf:/etc/bind/named.conf
+      - ./configs/zones:/etc/bind/zones
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+
+  web:
+    image: nginx:stable
+    volumes:
+      - ./configs/nginx.conf:/etc/nginx/nginx.conf
+      - ./www:/usr/share/nginx/html
+    ports:
+      - "80:80"
+
+  proxy:
+    image: nginx:stable
+    volumes:
+      - ./configs/reverse-proxy.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8080:80"

@@ -1,0 +1,5 @@
+kea_interface: "enp0s8"
+kea_subnet: "192.168.56.0/24"
+kea_pool: "192.168.56.50 - 192.168.56.100"
+kea_router: "192.168.56.1"
+kea_dns: "192.168.56.10"

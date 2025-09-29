@@ -1,0 +1,22 @@
+- name: Deploy ISP services
+  hosts: all
+  become: yes
+  tasks:
+    - name: Copiar configs
+      copy:
+        src: "../configs/"
+        dest: "/etc/isp-configs/"
+    - name: Reiniciar Kea DHCPv4
+      service:
+        name: kea-dhcp4-server
+        state: restarted
+    - name: Reiniciar BIND9
+      service:
+        name: bind9
+        state: restarted
+    - name: Reiniciar Nginx
+      service:
+        name: nginx
+        state: restarted
+    - name: Aplicar reglas nftables
+      command: nft -f /etc/isp-configs/nftables.conf

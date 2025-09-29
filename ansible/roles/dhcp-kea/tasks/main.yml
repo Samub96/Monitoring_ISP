@@ -1,0 +1,30 @@
+- name: Instalar repositorio Kea
+  apt:
+    name: software-properties-common
+    state: present
+    update_cache: yes
+
+- name: Añadir PPA de Kea
+  apt_repository:
+    repo: ppa:isc/kea
+    state: present
+    update_cache: yes
+
+- name: Instalar Kea DHCPv4
+  apt:
+    name: kea-dhcp4-server
+    state: present
+
+- name: Copiar configuración de Kea
+  template:
+    src: kea-dhcp4.conf.j2
+    dest: /etc/kea/kea-dhcp4.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Habilitar y arrancar Kea DHCPv4
+  service:
+    name: kea-dhcp4-server
+    state: restarted
+    enabled: true

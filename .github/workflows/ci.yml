@@ -1,0 +1,67 @@
+name: ISP Lab CI/CD
+
+on: [push, pull_request]
+
+jobs:
+  validate-dhcp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: kea-dhcp4 -t -c ./configs/kea-dhcp4.conf
+      - run: kea-dhcp6 -t -c ./configs/kea-dhcp6.conf
+
+  validate-dns:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: named-checkconf ./configs/named.conf
+      - run: named-checkzone akranes.xyz ./configs/zones/db.akranes.xyz
+
+  validate-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: nginx -t -c $PWD/configs/nginx.conf
+
+  validate-firewall:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: sudo nft -c -f ./configs/nftables.conf
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    services:
+      dhcp:
+        image: iscproject/kea-dhcp4
+        volumes:
+          - ./configs/kea-dhcp4.conf:/etc/kea/kea-dhcp4.conf
+      dns:
+        image: internetsystemsconsortium/bind9:9.18
+        volumes:
+          - ./configs/named.conf:/etc/bind/named.conf
+          - ./configs/zones:/etc/bind/zones
+    steps:
+      - run: perfdhcp -4 -r 3 -n 3 127.0.0.1
+      - run: dig @127.0.0.1 akranes.xyz
+
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: docker-compose up -d
+      - run: sleep 10
+      - run: curl -I http://localhost
+      - run: dig @127.0.0.1 akranes.xyz
+      - run: docker-compose down
+
+  deploy:
+    needs: [integration-test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Ansible Playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ansible/deploy.yml
+          inventory: ansible/inventory.ini

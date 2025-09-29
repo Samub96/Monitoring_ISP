@@ -1,0 +1,4 @@
+- hosts: dhcp
+  become: yes
+  roles:
+    - dhcp-kea

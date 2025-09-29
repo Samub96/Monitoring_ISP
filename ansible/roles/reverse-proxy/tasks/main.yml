@@ -1,0 +1,22 @@
+- name: Instalar Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: Configurar reverse proxy
+  template:
+    src: proxy.conf.j2
+    dest: /etc/nginx/sites-available/proxy.conf
+
+- name: Activar proxy
+  file:
+    src: /etc/nginx/sites-available/proxy.conf
+    dest: /etc/nginx/sites-enabled/proxy.conf
+    state: link
+    force: yes
+
+- name: Reiniciar nginx
+  service:
+    name: nginx
+    state: restarted
